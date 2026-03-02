@@ -1,0 +1,12 @@
+{
+  "appId": "io.t6x.wasmagenttools.test",
+  "appName": "Wasm Tools Test",
+  "webDir": "www",
+  "server": {
+    "iosScheme": "capacitor"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "loggingBehavior": "debug"
+}

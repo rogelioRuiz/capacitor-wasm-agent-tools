@@ -1,0 +1,32 @@
+[package]
+name = "wasm-agent-tools-ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "wasm_agent_tools_ffi"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+uniffi = { version = "0.28", features = ["cli"] }
+wasmtime = { version = "29", default-features = false, features = ["cranelift", "pulley", "runtime", "wat"] }
+wasmtime-wasi = { version = "29", default-features = false, features = ["preview1"] }
+# Pin wiggle without wasmtime_async to avoid wasmtime-fiber (ELF asm breaks Mach-O/iOS)
+wiggle = { version = "29", default-features = false, features = ["wasmtime", "wiggle_metadata"] }
+
+[patch.crates-io]
+# Fix iOS builds: upstream wasmtime-asm-macros only checks target_os="macos"
+# for Mach-O directives, but iOS/tvOS/watchOS/visionOS also need them.
+wasmtime-asm-macros = { path = "../wasmtime-asm-macros-patched" }
+wasmtime-fiber = { path = "../wasmtime-fiber-patched" }
+
+[profile.release]
+opt-level = "z"
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true

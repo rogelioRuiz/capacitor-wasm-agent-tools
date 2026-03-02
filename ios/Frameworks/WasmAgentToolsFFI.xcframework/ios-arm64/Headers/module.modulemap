@@ -1,0 +1,4 @@
+module wasm_agent_tools_ffiFFI {
+    header "wasm_agent_tools_ffiFFI.h"
+    export *
+}

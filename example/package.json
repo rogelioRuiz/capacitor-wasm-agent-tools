@@ -1,0 +1,24 @@
+{
+  "name": "capacitor-wasm-agent-tools-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plain HTML E2E harness for capacitor-wasm-agent-tools",
+  "scripts": {
+    "sync": "cap sync",
+    "add:android": "cap add android",
+    "add:ios": "cap add ios",
+    "sync:android": "cap sync android",
+    "sync:ios": "cap sync ios",
+    "test:android": "node ./test-e2e-android.mjs",
+    "test:ios": "node ./test-e2e-ios.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "capacitor-wasm-agent-tools": "file:.."
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.1.0"
+  }
+}

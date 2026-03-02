@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Rust build artifacts
+rust/wasm-agent-tools-ffi/target/
+rust/wasmtime-asm-macros-patched/target/
+rust/wasmtime-fiber-patched/target/
+
+# Android build artifacts
+android/build/
+android/.gradle/
+
+# iOS build artifacts
+ios/Pods/
+
+# Example app — only keep seed files (package.json, capacitor.config.json, index.html, test runners)
+example/node_modules/
+example/package-lock.json
+example/android/
+example/ios/
+example/www/
+!example/www/index.html
+
+# Cargo metadata
+.cargo-ok
+.cargo_vcs_info.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local

@@ -1,0 +1,53 @@
+{
+  "name": "capacitor-wasm-agent-tools",
+  "version": "0.1.0",
+  "description": "Standalone Rust-backed Capacitor plugin for WASM sandbox execution.",
+  "main": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "type": "module",
+  "author": "Techxagon",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "build:android": "./scripts/build-android.sh",
+    "build:ios": "./scripts/build-ios.sh",
+    "clean": "rm -rf dist"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  },
+  "files": [
+    "dist/esm/",
+    "android/src/main/",
+    "android/build.gradle",
+    "ios/Sources/",
+    "ios/Frameworks/",
+    "CapacitorWasmAgentTools.podspec",
+    "Package.swift"
+  ],
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "rust",
+    "uniffi",
+    "wasm",
+    "sandbox"
+  ],
+  "peerDependencies": {
+    "@capacitor/core": "^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@changesets/cli": "^2.27.0",
+    "typescript": "~5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
