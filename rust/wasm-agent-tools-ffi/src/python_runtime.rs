@@ -7,7 +7,15 @@ use wasmtime::Module;
 const DEFAULT_FUEL_LIMIT: u64 = 1_000_000_000;
 const DEFAULT_MAX_MEMORY_BYTES: u64 = 32 * 1024 * 1024;
 const DEFAULT_TIMEOUT_SECS: u64 = 5;
+// Raw WASM kept as fallback for desktop/tests where precompiled isn't available
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 const RUSTPYTHON_WASM_BYTES: &[u8] = include_bytes!("../wasm/rustpython.wasm");
+
+// Precompiled Cranelift machine code — produced by `cargo run --bin precompile`
+#[cfg(target_os = "android")]
+const RUSTPYTHON_PRECOMPILED: &[u8] = include_bytes!("../wasm/rustpython-android-arm64.cwasm");
+#[cfg(target_os = "ios")]
+const RUSTPYTHON_PRECOMPILED: &[u8] = include_bytes!("../wasm/rustpython-ios-arm64.cwasm");
 const PYTHON_PRELUDE: &str = r#"import sys
 class _Blocked:
     def __getattr__(self, name):
@@ -65,8 +73,7 @@ impl PythonRuntime {
     #[uniffi::constructor]
     pub fn create() -> Result<Arc<Self>, WasmToolsError> {
         let host = SharedEngineHost::global()?;
-        let rustpython_module =
-            compile_embedded_module(host.engine(), "RustPython", RUSTPYTHON_WASM_BYTES)?;
+        let rustpython_module = load_rustpython_module(host.engine())?;
         Ok(Arc::new(Self {
             host,
             rustpython_module,
@@ -106,19 +113,25 @@ impl PythonRuntime {
     }
 }
 
-fn compile_embedded_module(
-    engine: &wasmtime::Engine,
-    name: &str,
-    bytes: &[u8],
-) -> Result<Module, WasmToolsError> {
-    if !bytes.starts_with(b"\0asm") {
-        return Err(io_error(format!(
-            "{name} WASM artifact is missing or still a placeholder; replace rust/wasm-agent-tools-ffi/wasm/rustpython.wasm with a real wasm32-wasip1 binary"
-        )));
-    }
+/// On mobile (Android/iOS), load the precompiled Cranelift machine code.
+/// On desktop/tests, JIT-compile from raw WASM bytes.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn load_rustpython_module(engine: &wasmtime::Engine) -> Result<Module, WasmToolsError> {
+    // SAFETY: the precompiled bytes were produced by the same wasmtime version
+    // and engine config (consume_fuel + epoch_interruption) via `cargo run --bin precompile`.
+    unsafe { Module::deserialize(engine, RUSTPYTHON_PRECOMPILED) }
+        .map_err(|err| integrity_error(format!("Failed to load precompiled RustPython module: {err}")))
+}
 
-    Module::new(engine, bytes)
-        .map_err(|err| integrity_error(format!("Failed to compile embedded {name} module: {err}")))
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn load_rustpython_module(engine: &wasmtime::Engine) -> Result<Module, WasmToolsError> {
+    if !RUSTPYTHON_WASM_BYTES.starts_with(b"\0asm") {
+        return Err(io_error(
+            "RustPython WASM artifact is missing or still a placeholder; replace rust/wasm-agent-tools-ffi/wasm/rustpython.wasm with a real wasm32-wasip1 binary"
+        ));
+    }
+    Module::new(engine, RUSTPYTHON_WASM_BYTES)
+        .map_err(|err| integrity_error(format!("Failed to compile RustPython module: {err}")))
 }
 
 #[cfg(test)]

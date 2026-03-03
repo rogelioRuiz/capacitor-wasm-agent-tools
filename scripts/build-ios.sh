@@ -24,10 +24,9 @@ cargo run --bin uniffi-bindgen -- generate \
 
 HEADERS_TMP="$RUST_DIR/target/xcframework-headers"
 rm -rf "$HEADERS_TMP"
-mkdir -p "$HEADERS_TMP"
-cp "$GENERATED_DIR/wasm_agent_tools_ffiFFI.h" "$HEADERS_TMP/"
-cp "$GENERATED_DIR/wasm_agent_tools_ffiFFI.modulemap" "$HEADERS_TMP/"
-cat > "$HEADERS_TMP/module.modulemap" << 'EOF'
+mkdir -p "$HEADERS_TMP/wasm_agent_tools_ffi"
+cp "$GENERATED_DIR/wasm_agent_tools_ffiFFI.h" "$HEADERS_TMP/wasm_agent_tools_ffi/"
+cat > "$HEADERS_TMP/wasm_agent_tools_ffi/module.modulemap" << 'EOF'
 module wasm_agent_tools_ffiFFI {
     header "wasm_agent_tools_ffiFFI.h"
     export *

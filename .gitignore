@@ -26,6 +26,9 @@ example/android/
 example/ios/
 example/dist/
 
+# Precompiled Cranelift machine code (built via `cargo run --bin precompile`)
+rust/wasm-agent-tools-ffi/wasm/*.cwasm
+
 # Cargo metadata
 .cargo-ok
 .cargo_vcs_info.json

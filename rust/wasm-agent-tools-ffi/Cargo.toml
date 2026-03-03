@@ -11,6 +11,10 @@ name = "wasm_agent_tools_ffi"
 name = "uniffi-bindgen"
 path = "uniffi-bindgen.rs"
 
+[[bin]]
+name = "precompile"
+path = "src/bin/precompile.rs"
+
 [dependencies]
 uniffi = { version = "0.28", features = ["cli"] }
 wasmtime = { version = "29", default-features = false, features = ["cranelift", "pulley", "runtime", "wat"] }
