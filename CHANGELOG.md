@@ -1,5 +1,12 @@
 # capacitor-wasm-agent-tools
 
+## 0.1.1
+
+### Patch Changes
+
+- Add README, LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, CHANGELOG, and GitHub issue/PR templates for open-source release
+- Add `repository`, `homepage`, `bugs` fields and expand keywords in package.json
+
 ## 0.1.0
 
 ### Initial Release
