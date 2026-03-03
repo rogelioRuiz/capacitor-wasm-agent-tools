@@ -1,18 +1,28 @@
 {
   "name": "capacitor-wasm-agent-tools",
   "version": "0.1.0",
-  "description": "Standalone Rust-backed Capacitor plugin for WASM sandbox execution.",
+  "description": "Standalone Rust-backed Capacitor plugin for secure sandboxed execution of WebAssembly, JavaScript, and Python on native mobile platforms.",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "type": "module",
   "author": "Techxagon",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogelioRuiz/capacitor-wasm-agent-tools.git"
+  },
+  "homepage": "https://github.com/rogelioRuiz/capacitor-wasm-agent-tools#readme",
+  "bugs": {
+    "url": "https://github.com/rogelioRuiz/capacitor-wasm-agent-tools/issues"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
     "build:android": "./scripts/build-android.sh",
     "build:ios": "./scripts/build-ios.sh",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "capacitor": {
     "ios": {
@@ -37,7 +47,14 @@
     "rust",
     "uniffi",
     "wasm",
-    "sandbox"
+    "webassembly",
+    "sandbox",
+    "wasmtime",
+    "quickjs",
+    "javascript",
+    "python",
+    "rustpython",
+    "ai"
   ],
   "peerDependencies": {
     "@capacitor/core": "^7.0.0 || ^8.0.0"
