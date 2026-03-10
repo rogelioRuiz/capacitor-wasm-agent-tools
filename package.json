@@ -1,6 +1,6 @@
 {
   "name": "capacitor-wasm-agent-tools",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Standalone Rust-backed Capacitor plugin for secure sandboxed execution of WebAssembly, JavaScript, and Python on native mobile platforms.",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",

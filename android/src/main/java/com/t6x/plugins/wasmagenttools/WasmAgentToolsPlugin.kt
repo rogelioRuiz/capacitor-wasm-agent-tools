@@ -1,6 +1,7 @@
 package com.t6x.plugins.wasmagenttools
 
 import android.util.Base64
+import android.util.Log
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -28,19 +29,28 @@ private const val DEFAULT_PYTHON_TIMEOUT_SECS = 5UL
 
 @CapacitorPlugin(name = "WasmAgentTools")
 class WasmAgentToolsPlugin : Plugin() {
+    companion object { private const val TAG = "WasmAgentTools" }
     private var wasmSandbox: WasmSandbox? = null
     private var jsRuntime: JsRuntime? = null
     private var pythonRuntime: PythonRuntime? = null
 
+    // Use dedicated threads instead of bridge.execute — the Capacitor bridge
+    // handler is a serial HandlerThread, and @PluginMethod already runs on it.
+    // Posting back via bridge.execute deadlocks because the handler is blocked
+    // waiting for the posted Runnable which is queued behind the current call.
+
     @PluginMethod
     fun createWasmSandbox(call: PluginCall) {
-        try {
-            wasmSandbox?.close()
-            wasmSandbox = WasmSandbox.create()
-            call.resolve()
-        } catch (e: Exception) {
-            call.reject("createWasmSandbox failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                wasmSandbox?.close()
+                wasmSandbox = WasmSandbox.create()
+                call.resolve()
+            } catch (e: Exception) {
+                call.reject("createWasmSandbox failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
@@ -49,14 +59,17 @@ class WasmAgentToolsPlugin : Plugin() {
         val wasmBase64 = call.getString("wasmBase64") ?: return call.reject("wasmBase64 is required")
         val inputJson = call.getString("inputJson") ?: return call.reject("inputJson is required")
 
-        try {
-            val wasmBytes = Base64.decode(wasmBase64, Base64.DEFAULT)
-            val config = toSandboxConfig(call.getObject("config"))
-            val result = sandbox.`execute`(wasmBytes, inputJson, config)
-            call.resolve(sandboxResultToJs(result))
-        } catch (e: Exception) {
-            call.reject("executeSandbox failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                val wasmBytes = Base64.decode(wasmBase64, Base64.DEFAULT)
+                val config = toSandboxConfig(call.getObject("config"))
+                val result = sandbox.`execute`(wasmBytes, inputJson, config)
+                call.resolve(sandboxResultToJs(result))
+            } catch (e: Exception) {
+                call.reject("executeSandbox failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
@@ -65,24 +78,30 @@ class WasmAgentToolsPlugin : Plugin() {
         val watText = call.getString("watText") ?: return call.reject("watText is required")
         val inputJson = call.getString("inputJson") ?: return call.reject("inputJson is required")
 
-        try {
-            val config = toSandboxConfig(call.getObject("config"))
-            val result = sandbox.`executeWat`(watText, inputJson, config)
-            call.resolve(sandboxResultToJs(result))
-        } catch (e: Exception) {
-            call.reject("executeWatSandbox failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                val config = toSandboxConfig(call.getObject("config"))
+                val result = sandbox.`executeWat`(watText, inputJson, config)
+                call.resolve(sandboxResultToJs(result))
+            } catch (e: Exception) {
+                call.reject("executeWatSandbox failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
     fun createJsRuntime(call: PluginCall) {
-        try {
-            jsRuntime?.close()
-            jsRuntime = JsRuntime.create()
-            call.resolve()
-        } catch (e: Exception) {
-            call.reject("createJsRuntime failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                jsRuntime?.close()
+                jsRuntime = JsRuntime.create()
+                call.resolve()
+            } catch (e: Exception) {
+                call.reject("createJsRuntime failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
@@ -90,24 +109,36 @@ class WasmAgentToolsPlugin : Plugin() {
         val runtime = requireJsRuntime(call) ?: return
         val code = call.getString("code") ?: return call.reject("code is required")
 
-        try {
-            val config = toJsConfig(call.getObject("config"))
-            val result = runtime.`execute`(code, config)
-            call.resolve(jsResultToJs(result))
-        } catch (e: Exception) {
-            call.reject("executeJs failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                val config = toJsConfig(call.getObject("config"))
+                val result = runtime.`execute`(code, config)
+                call.resolve(jsResultToJs(result))
+            } catch (e: Exception) {
+                call.reject("executeJs failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
     fun createPythonRuntime(call: PluginCall) {
-        try {
-            pythonRuntime?.close()
-            pythonRuntime = PythonRuntime.create()
-            call.resolve()
-        } catch (e: Exception) {
-            call.reject("createPythonRuntime failed: ${e.message}", e)
-        }
+        Log.i(TAG, "createPythonRuntime: dispatching to Thread (caller=${Thread.currentThread().name})")
+        call.setKeepAlive(true)
+        Thread {
+            Log.i(TAG, "createPythonRuntime: Thread started (${Thread.currentThread().name})")
+            try {
+                pythonRuntime?.close()
+                Log.i(TAG, "createPythonRuntime: calling PythonRuntime.create()...")
+                val start = System.currentTimeMillis()
+                pythonRuntime = PythonRuntime.create()
+                Log.i(TAG, "createPythonRuntime: done in ${System.currentTimeMillis() - start}ms")
+                call.resolve()
+            } catch (e: Exception) {
+                Log.e(TAG, "createPythonRuntime: FAILED: ${e.message}", e)
+                call.reject("createPythonRuntime failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     @PluginMethod
@@ -115,13 +146,16 @@ class WasmAgentToolsPlugin : Plugin() {
         val runtime = requirePythonRuntime(call) ?: return
         val code = call.getString("code") ?: return call.reject("code is required")
 
-        try {
-            val config = toPythonConfig(call.getObject("config"))
-            val result = runtime.`execute`(code, config)
-            call.resolve(pythonResultToJs(result))
-        } catch (e: Exception) {
-            call.reject("executePython failed: ${e.message}", e)
-        }
+        call.setKeepAlive(true)
+        Thread {
+            try {
+                val config = toPythonConfig(call.getObject("config"))
+                val result = runtime.`execute`(code, config)
+                call.resolve(pythonResultToJs(result))
+            } catch (e: Exception) {
+                call.reject("executePython failed: ${e.message}", e)
+            }
+        }.start()
     }
 
     private fun requireWasmSandbox(call: PluginCall): WasmSandbox? {
